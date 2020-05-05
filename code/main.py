@@ -11,7 +11,7 @@ args = option.args
 torch.manual_seed(args.seed)
 chkp = logger.Logger(args)
 
-if args.task == 'VideoDeblur':
+if args.task == 'VideoBDE':
     print("Selected task: {}".format(args.task))
     model = model.Model(args, chkp)
     loss = loss.Loss(args, chkp) if not args.test_only else None

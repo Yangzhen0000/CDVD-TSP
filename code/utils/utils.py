@@ -31,7 +31,8 @@ def np2Tensor(*args, rgb_range=255, n_colors=1):
         img = img.astype('float64')
         np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1)))  # NHWC -> NCHW
         tensor = torch.from_numpy(np_transpose).float()  # numpy -> tensor
-        tensor.mul_(rgb_range / 255)  # (0,255) -> (0,1)
+        # tensor.mul_(rgb_range / 255)  # (0,255) -> (0,1)
+        tensor.mul_(1 / rgb_range)  # (0, rgb_range) -> (0, 1)
 
         return tensor
 
@@ -39,6 +40,7 @@ def np2Tensor(*args, rgb_range=255, n_colors=1):
 
 
 def data_augment(*args, hflip=True, rot=True):
+    '''horizontal flip, vertical flip and rotate 90 degree'''
     hflip = hflip and random.random() < 0.5
     vflip = rot and random.random() < 0.5
     rot90 = rot and random.random() < 0.5
