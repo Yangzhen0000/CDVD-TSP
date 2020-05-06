@@ -4,6 +4,7 @@ import numpy as np
 import os
 import datetime
 import skimage.color as sc
+import cv2
 
 import matplotlib
 
@@ -61,24 +62,26 @@ class Logger:
         self.plot_psnr_log(epoch)
 
     def save_images(self, filename, save_list, epoch):
-        if self.args.task == 'VideoDeblur':
+        if self.args.task == 'VideoBDE':
             f = filename.split('.')
             dirname = '{}/result/{}/{}'.format(self.dir, self.args.data_test, f[0])
             if not os.path.exists(dirname):
                 os.mkdir(dirname)
             filename = '{}/{}'.format(dirname, f[1])
-            postfix = ['gt', 'blur', 'deblur_iter1', 'deblur_iter2']
+            postfix = ['gt', 'lbd', 'res_iter1', 'res_iter2']
         else:
             raise NotImplementedError('Task [{:s}] is not found'.format(self.args.task))
         for img, post in zip(save_list, postfix):
             img = img[0].data
-            img = np.transpose(img.cpu().numpy(), (1, 2, 0)).astype(np.uint8)
+            # img = np.transpose(img.cpu().numpy(), (1, 2, 0)).astype(np.uint8)
+            img = np.transpose(img.cpu().numpy(), (1, 2, 0)).astype(np.uint16)
             if img.shape[2] == 1:
                 img = img.squeeze(axis=2)
             elif img.shape[2] == 3 and self.args.n_colors == 1:
                 img = sc.ycbcr2rgb(img.astype('float')).clip(0, 1)
                 img = (255 * img).round().astype('uint8')
-            imageio.imwrite('{}_{}.png'.format(filename, post), img)
+            # imageio.imwrite('{}_{}.png'.format(filename, post), img)
+            cv2.imwrite('{}_{}.png'.format(filename, post), img)
 
     def start_log(self, train=True):
         if train:

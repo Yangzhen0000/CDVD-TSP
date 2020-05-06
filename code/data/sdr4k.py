@@ -9,7 +9,11 @@ class SDR4K(videodata.VIDEODATA):
     def _set_filesystem(self, dir_data):
         print("Loading {} => {} DataSet".format("train" if self.train else "test", self.name))
         self.apath = dir_data
-        self.dir_gt = os.path.join(self.apath, 'SDR_10BIT_patch')
-        self.dir_input = os.path.join(self.apath, 'SDR_4BIT_patch')
+        if self.train:
+            self.dir_gt = os.path.join(self.apath, 'SDR_10BIT_patch')
+            self.dir_input = os.path.join(self.apath, 'SDR_4BIT_patch')
+        else:
+            self.dir_gt = os.path.join(self.apath, 'SDR_10BIT')
+            self.dir_input = os.path.join(self.apath, 'SDR_4BIT')
         print("DataSet gt path:", self.dir_gt)
         print("DataSet blur path:", self.dir_input)

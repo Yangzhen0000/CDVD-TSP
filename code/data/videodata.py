@@ -22,6 +22,7 @@ class VIDEODATA(data.Dataset):
         if train:
             self._set_filesystem(args.dir_data)
         else:
+            # print("==========Loading validation data")
             self._set_filesystem(args.dir_data_test)
 
         self.images_gt, self.images_input = self._scan()
@@ -56,7 +57,26 @@ class VIDEODATA(data.Dataset):
         '''
         vid_gt_names = sorted(glob.glob(os.path.join(self.dir_gt, '*')))
         vid_input_names = sorted(glob.glob(os.path.join(self.dir_input, '*')))
+
+        # for i in range(len(vid_input_names)):
+        #     basename = os.path.basename(vid_input_names[i])
+        #     dirname = os.path.dirname(vid_gt_names[i])
+        #     name = os.path.join(dirname, basename)
+        #     if name not in vid_gt_names:
+        #         print("Missing file {}".format(name))
+
+        # print("Length of gt_names:{}".format(len(vid_gt_names)))
+        # print("Length of input_names:{}".format(len(vid_input_names)))
         assert len(vid_gt_names) == len(vid_input_names), "len(vid_gt_names) must equal len(vid_input_names)"
+
+        # set a small training set for debugging
+        if self.train:
+            vid_gt_names = vid_gt_names[:1]
+            vid_input_names = vid_input_names[:1]
+        # why validation count zero?
+        # if not self.train:
+        #     print("=========={}".format(len(vid_gt_names)))
+        #     print("=========={}".format(len(vid_input_names)))
 
         images_gt = []
         images_input = []
@@ -138,8 +158,26 @@ class VIDEODATA(data.Dataset):
         video_idx, frame_idx = self._find_video_num(idx, n_poss_frames)
         f_gts = self.images_gt[video_idx][frame_idx:frame_idx + self.n_seq]
         f_inputs = self.images_input[video_idx][frame_idx:frame_idx + self.n_seq]
-        gts = np.array([cv2.imread(hr_name, cv2.IMREAD_UNCHANGED) for hr_name in f_gts])  # shape, (nseq, h, w, c)
-        inputs = np.array([cv2.imread(lr_name, cv2.IMREAD_UNCHANGED) for lr_name in f_inputs])  # shape, (nseq, h, w, c)
+        # gts = np.array([cv2.imread(hr_name, cv2.IMREAD_UNCHANGED) for hr_name in f_gts])  # shape, (nseq, h, w, c)
+        # inputs = np.array([cv2.imread(lr_name, cv2.IMREAD_UNCHANGED) for lr_name in f_inputs])  # shape, (nseq, h, w, c)
+
+        gts = []
+        inputs = []
+        for hr_name in f_gts:
+            hr_img = cv2.imread(hr_name, cv2.IMREAD_UNCHANGED)
+            while hr_img is None:
+                print("Error in reading image {}".format(hr_name))
+                hr_img = cv2.imread(hr_name, cv2.IMREAD_UNCHANGED)
+            gts.append(hr_img)
+        for lr_name in f_inputs:
+            lr_img = cv2.imread(lr_name, cv2.IMREAD_UNCHANGED)
+            while lr_img is None:
+                print("Error in reading image {}".format(lr_name))
+                lr_img = cv2.imread(lr_name, cv2.IMREAD_UNCHANGED)
+            inputs.append(lr_img)
+        gts = np.array(gts)
+        inputs = np.array(inputs)
+
         filenames = [os.path.split(os.path.dirname(name))[-1] + '.' + os.path.splitext(os.path.basename(name))[0]
                      for name in f_gts]  #???
 
@@ -167,6 +205,11 @@ class VIDEODATA(data.Dataset):
                 input, gt = utils.data_augment(input, gt)
         else:
             h, w, c = input.shape
+
+            # resize to accelerate the validation process
+            input = cv2.resize(input, (960, 540))
+            gt = cv2.resize(gt, (960, 540))
+
             new_h, new_w = h - h % size_must_mode, w - w % size_must_mode
             input, gt = input[:new_h, :new_w, :], gt[:new_h, :new_w, :]
         return input, gt

@@ -11,6 +11,9 @@ def set_template(args):
         args.lr = 1e-4
         args.lr_decay = 200
         args.data_train = 'SDR4K'
+        args.data_test = 'SDR4K'
         args.rgb_range = 65535
+        
+        args.test_every = 1
     else:
         raise NotImplementedError('Template [{:s}] is not found'.format(args.template))
