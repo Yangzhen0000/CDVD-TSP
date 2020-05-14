@@ -63,11 +63,13 @@ def postprocess(*images, rgb_range, ycbcr_flag, device):
         if ycbcr_flag:
             out = img.mul(rgb_coefficient).clamp(16, 235)
         else:
-            out = img.mul(rgb_coefficient).clamp(0, 255).round()
+            # out = img.mul(rgb_coefficient).clamp(0, 255).round()
+            out = img.mul(rgb_coefficient).clamp(0, 65535).round()
 
         return out
 
-    rgb_coefficient = 255 / rgb_range
+    # rgb_coefficient = 255 / rgb_range
+    rgb_coefficient = 65535
     return [_postprocess(img, rgb_coefficient, ycbcr_flag, device) for img in images]
 
 

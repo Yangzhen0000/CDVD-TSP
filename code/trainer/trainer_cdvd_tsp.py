@@ -80,10 +80,10 @@ class Trainer_CDVD_TSP(Trainer):
 
                 recons_1, recons_2, recons_3, recons_2_iter, _ = self.model(input)
 
-                PSNR_iter1 = utils.calc_psnr(gt, recons_2, rgb_range=self.args.rgb_range)
+                PSNR_iter1 = utils.calc_psnr(gt, recons_2, rgb_range=1.)
                 total_PSNR_iter1 += PSNR_iter1
                 total_num += 1
-                PSNR = utils.calc_psnr(gt, recons_2_iter, rgb_range=self.args.rgb_range)
+                PSNR = utils.calc_psnr(gt, recons_2_iter, rgb_range=1.)
                 self.ckp.report_log(PSNR, train=False)
 
                 if self.args.save_images:

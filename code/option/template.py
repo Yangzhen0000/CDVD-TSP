@@ -14,6 +14,7 @@ def set_template(args):
         args.data_test = 'SDR4K'
         args.rgb_range = 65535
         
-        args.test_every = 1
+        # debugging setting: 1
+        args.test_every = 1000
     else:
         raise NotImplementedError('Template [{:s}] is not found'.format(args.template))

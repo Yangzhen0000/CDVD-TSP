@@ -5,6 +5,7 @@ import torch
 import torch.utils.data as data
 import utils.utils as utils
 import cv2
+import random
 
 
 class VIDEODATA(data.Dataset):
@@ -69,19 +70,29 @@ class VIDEODATA(data.Dataset):
         # print("Length of input_names:{}".format(len(vid_input_names)))
         assert len(vid_gt_names) == len(vid_input_names), "len(vid_gt_names) must equal len(vid_input_names)"
 
-        # set a small training set for debugging
-        if self.train:
-            vid_gt_names = vid_gt_names[:1]
-            vid_input_names = vid_input_names[:1]
+        # debugging setting: a small training set
+        # if self.train:
+        #     vid_gt_names = vid_gt_names[:1]
+        #     vid_input_names = vid_input_names[:1]
         # why validation count zero?
         # if not self.train:
         #     print("=========={}".format(len(vid_gt_names)))
         #     print("=========={}".format(len(vid_input_names)))
 
+        # random sample the dataset
+        if self.train:
+            index_list = random.sample(range(0, len(vid_gt_names)), 200)
+            sampled_gt_names = [vid_gt_names[index] for index in index_list]
+            sample_input_names = [vid_input_names[index] for index in index_list]
+        else:
+            sampled_gt_names = vid_gt_names
+            sample_input_names = vid_input_names
+
         images_gt = []
         images_input = []
 
-        for vid_gt_name, vid_input_name in zip(vid_gt_names, vid_input_names):
+        # for vid_gt_name, vid_input_name in zip(vid_gt_names, vid_input_names):
+        for vid_gt_name, vid_input_name in zip(sampled_gt_names, sample_input_names):
             if self.train:
                 gt_dir_names = sorted(glob.glob(os.path.join(vid_gt_name, '*')))[:self.args.n_frames_per_video]
                 input_dir_names = sorted(glob.glob(os.path.join(vid_input_name, '*')))[:self.args.n_frames_per_video]
@@ -126,9 +137,13 @@ class VIDEODATA(data.Dataset):
         inputs = np.array(inputs_list)  # (nseq, ps, ps, c)
         gts = np.array(gts_list)  # (nseq, ps, ps, c)
 
+        # convert numpy array to tensor with range (0, 1)
         input_tensors = utils.np2Tensor(*inputs, rgb_range=self.args.rgb_range, n_colors=self.args.n_colors) # [(c, ps, ps), ...], len: nseq, range: (0, 1)
         gt_tensors = utils.np2Tensor(*gts, rgb_range=self.args.rgb_range, n_colors=self.args.n_colors)
 
+        # debugging output
+        # print("==========> after normalizing, gt, min:{}, max:{}, lr, min:{}, max:{}".format(
+        #     gt_tensors.min(), gt_tensors.max(), input_tensors.min(), input_tensors.max()))
         return torch.stack(input_tensors), torch.stack(gt_tensors), filenames  # (nseq, c, ps, ps), what's the use of filenames
 
     def __len__(self):
@@ -169,17 +184,28 @@ class VIDEODATA(data.Dataset):
                 print("Error in reading image {}".format(hr_name))
                 hr_img = cv2.imread(hr_name, cv2.IMREAD_UNCHANGED)
             gts.append(hr_img)
+            # debugging output
+            # if os.path.basename(hr_name) == '003.png':
+            #     cv2.imwrite("load_hr_003.png", hr_img)
         for lr_name in f_inputs:
             lr_img = cv2.imread(lr_name, cv2.IMREAD_UNCHANGED)
             while lr_img is None:
                 print("Error in reading image {}".format(lr_name))
                 lr_img = cv2.imread(lr_name, cv2.IMREAD_UNCHANGED)
             inputs.append(lr_img)
+            # debugging output
+            # if os.path.basename(lr_name) == '003.png':
+            #     cv2.imwrite("load_lr_003.png", lr_img)
         gts = np.array(gts)
         inputs = np.array(inputs)
 
+        # debug output
+        # print("==========> gt.datatype={}, inputs.datatype={}".format(gts.dtype, inputs.dtype))
+        # print("==========> after loading, gt, min:{}, max:{}, lr, min:{}, max:{}".format(
+        #     gts.min(), gts.max(), inputs.min(), inputs.max()))
+
         filenames = [os.path.split(os.path.dirname(name))[-1] + '.' + os.path.splitext(os.path.basename(name))[0]
-                     for name in f_gts]  #???
+                     for name in f_gts]
 
         return inputs, gts, filenames
 
