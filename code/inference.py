@@ -2,7 +2,6 @@ import os
 import torch
 import glob
 import numpy as np
-import imageio
 import cv2
 import math
 import time
@@ -37,7 +36,7 @@ class Inference:
             os.mkdir(self.result_path)
             print('mkdir: {}'.format(self.result_path))
 
-        self.input_path = os.path.join(self.data_path, "blur")
+        self.input_path = os.path.join(self.data_path, "input")
         self.GT_path = os.path.join(self.data_path, "gt")
 
         now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -77,8 +76,13 @@ class Inference:
                 for in_seq, gt_seq in zip(input_seqs, gt_seqs):
                     start_time = time.time()
                     filename = os.path.basename(in_seq[self.n_seq // 2]).split('.')[0]
-                    inputs = [imageio.imread(p) for p in in_seq]
-                    gt = imageio.imread(gt_seq[self.n_seq // 2])
+                    
+                    origins = [cv2.imread(p, cv2.IMREAD_UNCHANGED) for p in in_seq]
+                    gt = cv2.imread(gt_seq[self.n_seq // 2], cv2.IMREAD_UNCHANGED)
+
+                    # resize to avoid CUDA OUT OF MEMORY
+                    inputs = [cv2.resize(p, (960, 540)) for p in origins]
+                    gt = cv2.resize(gt, (960, 540))
 
                     h, w, c = inputs[self.n_seq // 2].shape
                     new_h, new_w = h - h % self.size_must_mode, w - w % self.size_must_mode
@@ -100,7 +104,7 @@ class Inference:
                     if self.save_image:
                         if not os.path.exists(os.path.join(self.result_path, v)):
                             os.mkdir(os.path.join(self.result_path, v))
-                        imageio.imwrite(os.path.join(self.result_path, v, '{}.png'.format(filename)), output_img)
+                        cv2.imwrite(os.path.join(self.result_path, v, '{}.png'.format(filename)), output_img)
                     postprocess_time = time.time()
 
                     self.logger.write_log(
@@ -123,12 +127,14 @@ class Inference:
             self.logger.write_log("# Total AVG-PSNR={:.5}, AVG-SSIM={:.4}".format(sum_psnr / n_img, sum_ssim / n_img))
 
     def gene_seq(self, img_list, n_seq):
+        # pad n_seq//2 frames at the begining and end
         if self.border:
             half = n_seq // 2
             img_list_temp = img_list[:half]
             img_list_temp.extend(img_list)
             img_list_temp.extend(img_list[-half:])
             img_list = img_list_temp
+        # divide frame sequences into index lists of length n_seq
         seq_list = []
         for i in range(len(img_list) - 2 * (n_seq // 2)):
             seq_list.append(img_list[i:i + n_seq])
@@ -140,16 +146,16 @@ class Inference:
             img = np.array(img).astype('float64')
             np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1)))  # HWC -> CHW
             tensor = torch.from_numpy(np_transpose).float()  # numpy -> tensor
-            tensor.mul_(rgb_range / 255)  # (0,255) -> (0,1)
+            tensor.mul_(rgb_range / 65535)  # (0,255) -> (0,1)
             tensor_list.append(tensor)
         stacked = torch.stack(tensor_list).unsqueeze(0)
         return stacked
 
     def tensor2numpy(self, tensor, rgb_range=1.):
-        rgb_coefficient = 255 / rgb_range
-        img = tensor.mul(rgb_coefficient).clamp(0, 255).round()
+        rgb_coefficient = 65535 / rgb_range
+        img = tensor.mul(rgb_coefficient).clamp(0, 65535).round()
         img = img[0].data
-        img = np.transpose(img.cpu().numpy(), (1, 2, 0)).astype(np.uint8)
+        img = np.transpose(img.cpu().numpy(), (1, 2, 0)).astype(np.uint16)
         return img
 
     def get_PSNR_SSIM(self, output, gt, crop_border=4):
@@ -168,7 +174,7 @@ class Inference:
         mse = np.mean((img1 - img2) ** 2)
         if mse == 0:
             return float('inf')
-        return 20 * math.log10(255.0 / math.sqrt(mse))
+        return 20 * math.log10(65535.0 / math.sqrt(mse))
 
     def calc_SSIM(self, img1, img2):
         '''calculate SSIM
@@ -177,8 +183,8 @@ class Inference:
         '''
 
         def ssim(img1, img2):
-            C1 = (0.01 * 255) ** 2
-            C2 = (0.03 * 255) ** 2
+            C1 = (0.01 * 65535) ** 2
+            C2 = (0.03 * 65535) ** 2
 
             img1 = img1.astype(np.float64)
             img2 = img2.astype(np.float64)

@@ -13,7 +13,7 @@ class SDR4K(videodata.VIDEODATA):
             self.dir_gt = os.path.join(self.apath, 'SDR_10BIT_patch')
             self.dir_input = os.path.join(self.apath, 'SDR_4BIT_patch')
         else:
-            self.dir_gt = os.path.join(self.apath, 'SDR_10BIT')
-            self.dir_input = os.path.join(self.apath, 'SDR_4BIT')
+            self.dir_gt = os.path.join(self.apath, 'gt')
+            self.dir_input = os.path.join(self.apath, 'input')
         print("DataSet gt path:", self.dir_gt)
         print("DataSet blur path:", self.dir_input)
