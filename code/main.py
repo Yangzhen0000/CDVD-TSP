@@ -16,7 +16,7 @@ if args.task == 'VideoBDE':
     model = model.Model(args, chkp)
     loss = loss.Loss(args, chkp) if not args.test_only else None
     loader = data.Data(args)
-    t = Trainer_CDVD_TSP(args, loader, model, loss, chkp)
+    t = Trainer_VBDE(args, loader, model, loss, chkp)
     while not t.terminate():
         t.train()
         t.test()
