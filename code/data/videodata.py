@@ -72,14 +72,13 @@ class VIDEODATA(data.Dataset):
 
         # debugging setting: a small training set
         # if self.train:
-        #     vid_gt_names = vid_gt_names[:1]
-        #     vid_input_names = vid_input_names[:1]
-        # why validation count zero?
+        #      vid_gt_names = vid_gt_names[:1]
+        #      vid_input_names = vid_input_names[:1]
         # if not self.train:
         #     print("=========={}".format(len(vid_gt_names)))
         #     print("=========={}".format(len(vid_input_names)))
 
-        # random sample the dataset
+        # random sample the dataset, comment for debugging
         if self.train:
             index_list = random.sample(range(0, len(vid_gt_names)), 200)
             sampled_gt_names = [vid_gt_names[index] for index in index_list]
@@ -91,7 +90,6 @@ class VIDEODATA(data.Dataset):
         images_gt = []
         images_input = []
 
-        # for vid_gt_name, vid_input_name in zip(vid_gt_names, vid_input_names):
         for vid_gt_name, vid_input_name in zip(sampled_gt_names, sample_input_names):
             if self.train:
                 gt_dir_names = sorted(glob.glob(os.path.join(vid_gt_name, '*')))[:self.args.n_frames_per_video]

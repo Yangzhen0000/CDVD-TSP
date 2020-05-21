@@ -29,7 +29,6 @@ class Trainer_VBDE(Trainer):
         self.loss.start_log()
         self.model.train()
         self.ckp.start_log()
-        mid_loss_sum = 0.
 
         for batch, (input, gt, _) in enumerate(self.loader_train):
 
@@ -47,12 +46,11 @@ class Trainer_VBDE(Trainer):
             self.ckp.report_log(loss.item())
 
             if (batch + 1) % self.args.print_every == 0:
-                self.ckp.write_log('[{}/{}]\tLoss : [total: {:.4f}]{}[mid: {:.4f}]'.format(
+                self.ckp.write_log('[{}/{}]\tLoss : [total: {:.4f}]{}'.format(
                     (batch + 1) * self.args.batch_size,
                     len(self.loader_train.dataset),
                     self.ckp.loss_log[-1] / (batch + 1),
-                    self.loss.display_loss(batch),
-                    mid_loss_sum / (batch + 1)
+                    self.loss.display_loss(batch)
                 ))
 
         self.loss.end_log(len(self.loader_train))
@@ -88,7 +86,7 @@ class Trainer_VBDE(Trainer):
 
             self.ckp.end_log(len(self.loader_test), train=False)
             best = self.ckp.psnr_log.max(0)
-            self.ckp.write_log('[{}]\taverage PSNR_iter2: {:.3f} (Best: {:.3f} @epoch {})'.format(
+            self.ckp.write_log('[{}]\taverage PSNR_iter: {:.3f} (Best: {:.3f} @epoch {})'.format(
                 self.args.data_test,
                 self.ckp.psnr_log[-1],
                 best[0], best[1] + 1))

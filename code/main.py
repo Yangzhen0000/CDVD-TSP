@@ -5,6 +5,7 @@ import model
 import loss
 import option
 from trainer.trainer_cdvd_tsp import Trainer_CDVD_TSP
+from trainer.trainer_vbde import Trainer_VBDE
 from logger import logger
 
 args = option.args
