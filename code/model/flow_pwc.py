@@ -75,6 +75,7 @@ class Flow_PWC(nn.Module):
 
         vgrid = vgrid.permute(0, 2, 3, 1)
         output = nn.functional.grid_sample(x, vgrid, padding_mode='border')
+        # how to understand the mask?
         mask = torch.autograd.Variable(torch.ones(x.size())).cuda()
         mask = nn.functional.grid_sample(mask, vgrid)
 

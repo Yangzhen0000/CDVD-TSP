@@ -46,12 +46,18 @@ class CDVD_TSP(nn.Module):
             print('Loading reconstruction pretrain model from {}'.format(recons_pretrain_fn))
 
     def get_masks(self, img_list, flow_mask_list):
+        '''
+        Calculate temporal sharpness prior mask
+        img_list: restricted frame sequences
+        flow_mask_list: ???
+        '''
         num_frames = len(img_list)
 
         img_list_copy = [img.detach() for img in img_list]  # detach backward
         if self.is_mask_filter:  # mean filter
             img_list_copy = [utils.calc_meanFilter(im, n_channel=3, kernel_size=5) for im in img_list_copy]
 
+        # calculate temporal sharpness prior
         delta = 1.
         mid_frame = img_list_copy[num_frames // 2]
         diff = torch.zeros_like(mid_frame)
@@ -61,6 +67,7 @@ class CDVD_TSP(nn.Module):
         diff = torch.sqrt(torch.sum(diff, dim=1, keepdim=True))
         luckiness = torch.exp(-diff)  # (0,1)
 
+        # how to understand the mask?
         sum_mask = torch.ones_like(flow_mask_list[0])
         for i in range(num_frames):
             sum_mask = sum_mask * flow_mask_list[i]

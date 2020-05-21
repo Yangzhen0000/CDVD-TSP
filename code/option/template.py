@@ -30,5 +30,14 @@ def set_template(args):
         args.rgb_range = 65535
         args.test_every = 1000
         args.print_every = 10
+
+        # update learning rate by gamma times every lr_decay epochs
+        args.lr_decay = 100
+        args.gamma = 0.1
+
+        # bit-depth parameters
+        args.low_bitdepth = 4
+        args.high_bitdepth = 16
+
     else:
         raise NotImplementedError('Template [{:s}] is not found'.format(args.template))
