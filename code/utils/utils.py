@@ -107,6 +107,26 @@ def calc_grad_sobel(img, device='cuda'):
 
     return grad_X, grad_Y, grad
 
+def calc_LOG(img, kernel_size=9, device='cuda'):
+    if not isinstance(img, torch.Tensor):
+        raise Exception("Now just support torch.Tensor. See the Type(img)={}".format(type(img)))
+    if not img.ndimension() == 4:
+        raise Exception("Tensor ndimension must equal to 4. See the img.ndimension={}".format(img.ndimension()))
+
+    img = torch.mean(img, dim=1, keepdim=True)
+    lap_kernel = np.array([[0,1,1,2,2,2,1,1,0],
+                        [1,2,4,5,5,5,4,2,1],
+                        [1,4,5,3,0,3,5,4,1],
+                        [2,5,3,-12,-24,-12,3,5,2],
+                        [2,5,0,-24,-40,-24,0,5,2],
+                        [2,5,3,-12,-24,-12,3,5,2],
+                        [1,4,5,3,0,3,4,4,1],
+                        [1,2,4,5,5,5,4,2,1],
+                        [0,1,1,2,2,2,1,1,0]]).reshape(1, 1, kernel_size, kernel_size)
+    lap_kernel = torch.from_numpy(lap_kernel).float().to(device)
+    grad = F.conv2d(img, lap_kernel, bias=None, stride=1, padding=kernel_size//2)
+    return grad
+
 
 def calc_meanFilter(img, kernel_size=11, n_channel=1, device='cuda'):
     mean_filter_X = np.ones(shape=(1, 1, kernel_size, kernel_size), dtype=np.float32) / (kernel_size * kernel_size)

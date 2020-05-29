@@ -65,9 +65,9 @@ class VBDE_QM(nn.Module):
         for i in range(num_frames):
             diff = diff + (img_list_copy[i] - mid_frame)
         diff = torch.sum(diff, dim=1, keepdim=True)
-        quantization_step = torch.tensor(2).pow(self.hbd - self.lbd)
-        low_thres = (diff > 2.5*quantization_step).float()
-        high_thres = (diff < 3.5*quantization_step).float()
+        quantization_step = (torch.tensor(2.0).pow(self.hbd - self.lbd) / 65535).cuda()
+        low_thres = (diff > 2.9*quantization_step).float()
+        high_thres = (diff < 3.1*quantization_step).float()
         quantization_mask = (low_thres + high_thres) // 2
 
         sum_mask = torch.ones_like(flow_mask_list[0])
@@ -78,7 +78,7 @@ class VBDE_QM(nn.Module):
         quantization_mask = quantization_mask * sum_mask
 
         # debugging
-        print("sum of the quantization mask:{}".format(torch.sum(quantization_mask)))
+        # print("sum of the quantization mask:{}".format(torch.sum(quantization_mask)))
         return quantization_mask
 
     def forward(self, x):
