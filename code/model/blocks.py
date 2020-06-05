@@ -1,5 +1,5 @@
 import torch.nn as nn
-
+import torch
 
 ###############################
 # common
@@ -39,3 +39,29 @@ class ResBlock(nn.Module):
         out += residual
 
         return out
+
+
+###############################
+# SpaceToDepth
+###############################
+class SpaceToDepth(nn.Module):
+    def __init__(self, block_size):
+        super(SpaceToDepth, self).__init__()
+        self.block_size = block_size
+        self.block_size_sq = block_size*block_size
+
+    def forward(self, input):
+        space = input.permute(0, 2, 3, 1)
+        (batch_size, s_height, s_width, s_depth) = space.size()
+        d_width = int(s_width / self.block_size)
+        d_height = int(s_height / self.block_size)
+        output = []
+        for channel in range(s_depth):
+            t_1 = space[:, :, :, channel].split(self.block_size, 2)
+            stack = [t_t.contiguous().view(batch_size, d_height, self.block_size_sq) for t_t in t_1]
+            channelO = torch.stack(stack, 1)
+            output.append(channelO)
+        output = torch.cat(output, 3)
+        output = output.permute(0, 2, 1, 3)
+        output = output.permute(0, 3, 1, 2)
+        return output
