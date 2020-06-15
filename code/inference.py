@@ -6,8 +6,9 @@ import cv2
 import math
 import time
 import argparse
-from model.cdvd_tsp import CDVD_TSP
-
+#from model.cdvd_tsp import CDVD_TSP
+from model.vbde_downflow import VBDE_DOWNFLOW
+from tqdm import tqdm
 
 class Traverse_Logger:
     def __init__(self, result_dir, filename='inference_log.txt'):
@@ -28,16 +29,16 @@ class Inference:
         self.model_path = args.model_path
         self.data_path = args.data_path
         self.result_path = args.result_path
-        self.n_seq = 5
+        self.n_seq = args.n_seq
         self.size_must_mode = 4
         self.device = 'cuda'
 
         if not os.path.exists(self.result_path):
-            os.mkdir(self.result_path)
+            os.makedirs(self.result_path)
             print('mkdir: {}'.format(self.result_path))
 
-        self.input_path = os.path.join(self.data_path, "input")
-        self.GT_path = os.path.join(self.data_path, "gt")
+        self.input_path = os.path.join(self.data_path, "SDR_4BIT")
+        self.GT_path = os.path.join(self.data_path, "SDR_10BIT")
 
         now_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         self.logger = Traverse_Logger(self.result_path, 'inference_log_{}.txt'.format(now_time))
@@ -52,8 +53,8 @@ class Inference:
         self.logger.write_log('size_must_mode: {}'.format(self.size_must_mode))
         self.logger.write_log('device: {}'.format(self.device))
 
-        self.net = CDVD_TSP(
-            in_channels=3, n_sequence=5, out_channels=3, n_resblock=3, n_feat=32,
+        self.net = VBDE_DOWNFLOW(
+            in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=3, n_feat=32,
             is_mask_filter=True, device=self.device
         )
         self.net.load_state_dict(torch.load(self.model_path), strict=False)
@@ -66,7 +67,7 @@ class Inference:
             total_psnr = {}
             total_ssim = {}
             videos = sorted(os.listdir(self.input_path))
-            for v in videos:
+            for v in tqdm(videos):
                 video_psnr = []
                 video_ssim = []
                 input_frames = sorted(glob.glob(os.path.join(self.input_path, v, "*")))
@@ -91,7 +92,7 @@ class Inference:
 
                     in_tensor = self.numpy2tensor(inputs).to(self.device)
                     preprocess_time = time.time()
-                    _, output_stage1, _, output, _ = self.net(in_tensor)
+                    output = self.net(in_tensor)
                     forward_time = time.time()
                     output_img = self.tensor2numpy(output)
 
@@ -234,6 +235,12 @@ if __name__ == '__main__':
                         help='the path of pretrain model')
     parser.add_argument('--result_path', type=str, default='../infer_results',
                         help='the path of deblur result')
+
+    parser.add_argument('--n_seq', type=int, default=3,
+                        help='number of input sequences')
+    parser.add_argument('--model', type=str, default='VBDE',
+                        help='model type')
+
     args = parser.parse_args()
 
     if args.default_data == 'DVD':
