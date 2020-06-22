@@ -136,3 +136,30 @@ def calc_meanFilter(img, kernel_size=11, n_channel=1, device='cuda'):
         new_img[:, i:i + 1, :, :] = F.conv2d(img[:, i:i + 1, :, :], mean_filter_X, bias=None,
                                              stride=1, padding=kernel_size // 2)
     return new_img
+
+def warp(self, img, flow):
+    B, C, H, W = img.size()
+    # mesh grid
+    xx = torch.arange(0, W).view(1, -1).repeat(H, 1)
+    yy = torch.arange(0, H).view(-1, 1).repeat(1, W)
+    xx = xx.view(1, 1, H, W).repeat(B, 1, 1, 1)
+    yy = yy.view(1, 1, H, W).repeat(B, 1, 1, 1)
+    grid = torch.cat((xx, yy), 1).float()
+    grid = grid.to(self.device)
+    vgrid = Variable(grid) + flow
+
+    # scale grid to [-1,1]
+    vgrid[:, 0, :, :] = 2.0 * vgrid[:, 0, :, :].clone() / max(W - 1, 1) - 1.0
+    vgrid[:, 1, :, :] = 2.0 * vgrid[:, 1, :, :].clone() / max(H - 1, 1) - 1.0
+
+    vgrid = vgrid.permute(0, 2, 3, 1)
+    output = nn.functional.grid_sample(img, vgrid, padding_mode='border')
+    mask = torch.autograd.Variable(torch.ones(img.size())).cuda()
+    mask = nn.functional.grid_sample(mask, vgrid)
+
+    mask[mask < 0.999] = 0
+    mask[mask > 0] = 1
+
+    output = output * mask
+
+    return output, mask
