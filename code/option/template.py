@@ -98,5 +98,22 @@ def set_template(args):
         # update learning rate by gamma times every lr_decay epochs
         args.lr_decay = 50
         args.gamma = 0.1
+    elif args.template == 'MOTION_NET':
+        args.task = 'OpticalFlow'
+        args.model = 'MOTION_NET'
+        args.n_sequence = 2
+        args.n_frames_per_video = 100
+        args.size_must_mode = 32
+        args.patch_size = 256
+        args.loss = 'MNL'
+        args.lr = 1e-4
+        args.data_train = 'SDR4K_FLOW'
+        args.data_test = 'SDR4K_FLOW'
+        args.rgb_range = 65535
+        args.test_every = 1000
+        args.print_every = 10
+
+        args.lr_decay = 50
+        args.gamma = 0.5
     else:
         raise NotImplementedError('Template [{:s}] is not found'.format(args.template))

@@ -6,6 +6,7 @@ import loss
 import option
 from trainer.trainer_cdvd_tsp import Trainer_CDVD_TSP
 from trainer.trainer_vbde import Trainer_VBDE
+from trainer.trainer_motion_net import  Trainer_MOTION_NET
 from logger import logger
 
 args = option.args
@@ -18,6 +19,15 @@ if args.task == 'VideoBDE':
     loss = loss.Loss(args, chkp) if not args.test_only else None
     loader = data.Data(args)
     t = Trainer_VBDE(args, loader, model, loss, chkp)
+    while not t.terminate():
+        t.train()
+        t.test()
+if args.task == 'MotionNet':
+    print("Selected task: {}".format(args.task))
+    model = model.Model(args, chkp)
+    loss = loss.Loss(args, chkp) if not  args.test_only else None
+    loader = data.Data(args)
+    t = Trainer_MOTION_NET(args, loader, model, loss, chkp)
     while not t.terminate():
         t.train()
         t.test()
