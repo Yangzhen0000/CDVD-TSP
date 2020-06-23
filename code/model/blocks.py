@@ -40,6 +40,34 @@ class ResBlock(nn.Module):
 
         return out
 
+###############################
+# 3d ResBlock
+###############################
+
+class ResBlock3D(nn.Module):
+    def __init__(self, inplanes, planes, kernel_size=(3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1), dilation=(1, 1, 1)):
+        super(ResBlock3D, self).__init__()
+        self.conv1 = nn.Conv3d(inplanes, planes, kernel_size=kernel_size, stride=stride,
+                               padding=padding, dilation=dilation)
+        self.conv2 = nn.Conv3d(planes, planes, kernel_size=kernel_size, stride=1,
+                               padding=padding, dilation=dilation)
+        self.relu = nn.ReLU(inplace=True)
+
+        self.res_translate = None
+        if not inplanes == planes or not stride == 1:
+            self.res_translate = nn.Conv3d(inplanes, planes, kernel_size=1, stride=stride)
+
+    def forward(self, x):
+        residual = x
+
+        out = self.relu(self.conv1(x))
+        out = self.conv2(out)
+
+        if self.res_translate is not None:
+            residual = self.res_translate(residual)
+        out += residual
+
+        return out
 
 ###############################
 # SpaceToDepth
