@@ -37,6 +37,8 @@ parser.add_argument('--n_colors', type=int, default=3,
                     help='number of color channels to use')
 parser.add_argument('--no_augment', action='store_true',
                     help='do not use data augmentation')
+parser.add_argument('--video_samples', type=int, default=200,
+                    help='video sample number of train set')
 
 # Model specifications
 parser.add_argument('--model', default='.',

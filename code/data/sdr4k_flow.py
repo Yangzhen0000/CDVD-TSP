@@ -44,7 +44,7 @@ class SDR4K_FLOW(data.Dataset):
     def _scan(self):
         vid_names = sorted(glob.glob(os.path.join(self.dir, '*')))
         if self.train:
-            index_list = random.sample(range(0, len(vid_names)), 200)
+            index_list = random.sample(range(0, len(vid_names)), self.args.video_samples)
             sampled_names = [vid_names[index] for index in index_list]
         else:
             sampled_names = vid_names

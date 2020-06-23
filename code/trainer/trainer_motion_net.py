@@ -71,9 +71,11 @@ class Trainer_MOTION_NET(Trainer):
                 flow = self.model(img1, img2)
                 warped_img2 = utils.warp(img2, flow)
 
-                PSNR = utils.calc_psnr(img1, warped_img2, rgb_range=1.)
+                restricted_PSNR = utils.calc_psnr(img1, warped_img2, rgb_range=1.)
+                original_PSNR = utils.calc_psnr(img1, img2, rgb_range=1.)
+                print("[Before restriction PSNR:{:.3f}], [After restriction PSNR]:{:.3f}")
                 total_num = total_num + 1
-                self.ckp.report_log(PSNR, train=False)
+                self.ckp.report_log(restricted_PSNR, train=False)
 
                 if self.args.save_images:
                     img1, warped_img2 = utils.postprocess(img1, warped_img2,

@@ -8,7 +8,9 @@ import time
 import argparse
 #from model.cdvd_tsp import CDVD_TSP
 #from model.vbde_downflow import VBDE_DOWNFLOW
-from model.vbde import VBDE
+#from model.vbde import VBDE
+#from model.vbde_residual import VBDE_RESIDUAL
+from model.vbde_stepmask import VBDE_STEPMASK
 from tqdm import tqdm
 
 class Traverse_Logger:
@@ -54,11 +56,19 @@ class Inference:
         self.logger.write_log('size_must_mode: {}'.format(self.size_must_mode))
         self.logger.write_log('device: {}'.format(self.device))
 
-        self.net = VBDE(
-            in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=2, n_feat=32,
+#       self.net = VBDE(
+#           in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=2, n_feat=32,
+#           is_mask_filter=True, device=self.device
+#       )
+#       self.net = VBDE_RESIDUAL(
+#           in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=3, n_feat=32,
+#           is_mask_filter=True, device=self.device
+#       )
+        self.net = VBDE_STEPMASK(
+            in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=3, n_feat=32,
             is_mask_filter=True, device=self.device
         )
-        self.net.load_state_dict(torch.load(self.model_path), strict=False)
+        self.net.load_state_dict(torch.load(self.model_path), strict=True)
         self.net = self.net.to(self.device)
         self.logger.write_log('Loading model from {}'.format(self.model_path))
         self.net.eval()
@@ -67,10 +77,12 @@ class Inference:
         with torch.no_grad():
             total_psnr = {}
             total_ssim = {}
+            total_forward_time = {}
             videos = sorted(os.listdir(self.input_path))
             for v in tqdm(videos):
                 video_psnr = []
                 video_ssim = []
+                video_forward_time = []
                 input_frames = sorted(glob.glob(os.path.join(self.input_path, v, "*")))
                 gt_frames = sorted(glob.glob(os.path.join(self.GT_path, v, "*")))
                 input_seqs = self.gene_seq(input_frames, n_seq=self.n_seq)
@@ -100,8 +112,10 @@ class Inference:
                     psnr, ssim = self.get_PSNR_SSIM(output_img, gt)
                     video_psnr.append(psnr)
                     video_ssim.append(ssim)
+                    video_forward_time.append(forward_time)
                     total_psnr[v] = video_psnr
                     total_ssim[v] = video_ssim
+                    total_forward_time[v] = video_forward_time
 
                     if self.save_image:
                         if not os.path.exists(os.path.join(self.result_path, v)):
@@ -119,14 +133,16 @@ class Inference:
 
             sum_psnr = 0.
             sum_ssim = 0.
+            sum_forward = 0.
             n_img = 0
             for k in total_psnr.keys():
-                self.logger.write_log("# Video:{} AVG-PSNR={:.5}, AVG-SSIM={:.4}".format(
-                    k, sum(total_psnr[k]) / len(total_psnr[k]), sum(total_ssim[k]) / len(total_ssim[k])))
+                self.logger.write_log("# Video:{} AVG-PSNR={:.5}, AVG-SSIM={:.4}, AVG-FORWARD-TIME={:.4}".format(
+                    k, sum(total_psnr[k]) / len(total_psnr[k]), sum(total_ssim[k]) / len(total_ssim[k]), sum(total_forward_time[k]) / len(total_forward_time[k])))
                 sum_psnr += sum(total_psnr[k])
                 sum_ssim += sum(total_ssim[k])
+                sum_forward += sum(total_forward_time[k])
                 n_img += len(total_psnr[k])
-            self.logger.write_log("# Total AVG-PSNR={:.5}, AVG-SSIM={:.4}".format(sum_psnr / n_img, sum_ssim / n_img))
+            self.logger.write_log("# Total AVG-PSNR={:.5}, AVG-SSIM={:.4}, AVG-FORWARD-TIME={:.4}".format(sum_psnr / n_img, sum_ssim / n_img, sum_forward / n_img))
 
     def gene_seq(self, img_list, n_seq):
         # pad n_seq//2 frames at the begining and end

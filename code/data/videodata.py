@@ -80,7 +80,7 @@ class VIDEODATA(data.Dataset):
 
         # random sample the dataset, comment for debugging
         if self.train:
-            index_list = random.sample(range(0, len(vid_gt_names)), 200)
+            index_list = random.sample(range(0, len(vid_gt_names)), self.args.video_samples)
             sampled_gt_names = [vid_gt_names[index] for index in index_list]
             sample_input_names = [vid_input_names[index] for index in index_list]
         else:

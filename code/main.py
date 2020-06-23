@@ -22,6 +22,7 @@ if args.task == 'VideoBDE':
     while not t.terminate():
         t.train()
         t.test()
+        t.loader_train = loader.update_train_loader(args)
 elif args.task == 'OpticalFlow':
     print("Selected task: {}".format(args.task))
     model = model.Model(args, chkp)

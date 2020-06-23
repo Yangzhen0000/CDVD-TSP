@@ -15,6 +15,8 @@ class Trainer_VBDE(Trainer):
 
     def make_optimizer(self):
         kwargs = {'lr': self.args.lr, 'weight_decay': self.args.weight_decay}
+        if self.args.model == 'C3D':
+            return optim.Adam([{"params": self.model.get_model().parameters()}], **kwargs)
         return optim.Adam([{"params": self.model.get_model().recons_net.parameters()},
                            {"params": self.model.get_model().flow_net.parameters(), "lr": 1e-6}],
                           **kwargs)
