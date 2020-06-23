@@ -4,6 +4,7 @@ import torch.optim as optim
 from tqdm import tqdm
 from utils import utils
 from trainer.trainer import Trainer
+import data
 
 
 class Trainer_MOTION_NET(Trainer):
@@ -12,6 +13,7 @@ class Trainer_MOTION_NET(Trainer):
         print("Using Trainer-MOTION-NET")
         assert args.n_sequence == 2, \
             "Only support args.n_sequence=2; but get args.n_sequence={}".format(args.n_sequence)
+        self.args = args
 
     def make_optimizer(self):
         kwargs = {'lr': self.args.lr, 'weight_decay': self.args.weight_decay}
@@ -27,9 +29,8 @@ class Trainer_MOTION_NET(Trainer):
         self.loss.start_log()
         self.model.train()
         self.ckp.start_log()
-
-        for batch, (img1, img2, _) in enumerate(self.loader_train):
-
+        for batch, (img1, img2, filename) in enumerate(self.loader_train):
+            
             img1 = img1.to(self.device)
             img2 = img2.to(self.device)
 
@@ -61,6 +62,9 @@ class Trainer_MOTION_NET(Trainer):
             total_num = 0.
             tqdm_test = tqdm(self.loader_test, ncols=80)
             for idx_img, (img1, img2, filename) in enumerate(tqdm_test):
+
+                filename = filename[1][0]
+                
                 img1 = img1.to(self.device)
                 img2 = img2.to(self.device)
 

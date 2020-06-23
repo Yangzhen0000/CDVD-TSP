@@ -68,6 +68,13 @@ class Logger:
                 os.mkdir(dirname)
             filename = '{}/{}'.format(dirname, f[1])
             postfix = ['gt', 'lbd', 'res_iter1', 'res_iter2']
+        elif self.args.task == 'OpticalFlow':
+            f = filename.split('.')
+            dirname = '{}/result/{}/{}'.format(self.dir, self.args.data_test, f[0])
+            if not os.path.exists(dirname):
+                os.mkdir(dirname)
+            filename = '{}/{}'.format(dirname, f[1])
+            postfix = ['gt', 'warped']
         else:
             raise NotImplementedError('Task [{:s}] is not found'.format(self.args.task))
         for img, post in zip(save_list, postfix):

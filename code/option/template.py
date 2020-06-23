@@ -105,7 +105,7 @@ def set_template(args):
         args.n_frames_per_video = 100
         args.size_must_mode = 32
         args.patch_size = 256
-        args.loss = 'MNL'
+        args.loss = '1*MNL'
         args.lr = 1e-4
         args.data_train = 'SDR4K_FLOW'
         args.data_test = 'SDR4K_FLOW'

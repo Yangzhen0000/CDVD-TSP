@@ -1,11 +1,15 @@
 import torch
 import torch.nn as nn
 
-class MotionNet(object):
+def make_model(args):
+    device = 'cpu' if args.cpu else 'cuda'
+    return MotionNet()
+
+
+class MotionNet(nn.Module):
     """docstring for MotionNet"""
-    def __init__(self, arg):
+    def __init__(self):
         super(MotionNet, self).__init__()
-        self.arg = arg
         print("Creating MotionNet")
 
         self.conv1 = nn.Sequential(

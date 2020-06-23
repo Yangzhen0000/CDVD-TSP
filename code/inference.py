@@ -7,7 +7,8 @@ import math
 import time
 import argparse
 #from model.cdvd_tsp import CDVD_TSP
-from model.vbde_downflow import VBDE_DOWNFLOW
+#from model.vbde_downflow import VBDE_DOWNFLOW
+from model.vbde import VBDE
 from tqdm import tqdm
 
 class Traverse_Logger:
@@ -53,8 +54,8 @@ class Inference:
         self.logger.write_log('size_must_mode: {}'.format(self.size_must_mode))
         self.logger.write_log('device: {}'.format(self.device))
 
-        self.net = VBDE_DOWNFLOW(
-            in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=3, n_feat=32,
+        self.net = VBDE(
+            in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=2, n_feat=32,
             is_mask_filter=True, device=self.device
         )
         self.net.load_state_dict(torch.load(self.model_path), strict=False)

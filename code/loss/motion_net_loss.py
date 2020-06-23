@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from math import exp
+from torch.autograd import Variable
 
 
 class MNL(nn.Module):
@@ -22,9 +23,9 @@ class MNL(nn.Module):
         self.cal_photometric_loss = L1_Charbonnier_Loss()
         self.cal_smooth_loss = TVLoss()
 
-        self.ssim_loss_weight = 0.16
+        self.ssim_loss_weight = 1
         self.photometric_loss_weight = 1
-        self.smooth_loss_weight = 1
+        self.smooth_loss_weight = 10
 
         self.device = device
 
@@ -57,7 +58,7 @@ class MNL(nn.Module):
 
     def forward(self, img1, img2, flow):
         # calculate photometric loss
-        _, _, flow_h, flow_w = flow.size()
+        batch_size, _, flow_h, flow_w = flow.size()
         downsampled_img1 = F.interpolate(img1, [flow_h, flow_w])
         downsampled_img2 = F.interpolate(img2, [flow_h, flow_w])
         scaled_flow = flow * self.flow_scale_factor
@@ -71,8 +72,9 @@ class MNL(nn.Module):
         x_smoothness_loss = self.cal_smooth_loss(flow[:, :1, :, :])
         y_smoothness_loss = self.cal_smooth_loss(flow[:, 1:, :, :])
         
-        return self.photometric_loss_weight*photometric_loss + self.ssim_loss_weight*ssim_loss + \
-                self.smooth_loss_weight*(x_smoothness_loss+y_smoothness_loss)
+        # print(photometric_loss, ssim_loss, x_smoothness_loss, y_smoothness_loss)
+        return (self.photometric_loss_weight*photometric_loss + self.ssim_loss_weight*ssim_loss + \
+                self.smooth_loss_weight*(x_smoothness_loss+y_smoothness_loss)) / batch_size
 
 
 class L1_Charbonnier_Loss(nn.Module):
@@ -82,9 +84,10 @@ class L1_Charbonnier_Loss(nn.Module):
         self.eps = 1e-6
 
     def forward(self, x, y):
+        _, _, h, w = x.size()
         diff = torch.add(x, -y)
         error = torch.sqrt(diff * diff + self.eps)
-        loss = torch.sum(error)
+        loss = torch.sum(error) / (h * w)
         return loss
 
 

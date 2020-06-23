@@ -32,14 +32,13 @@ class SDR4K_FLOW(data.Dataset):
         print("Number of videos to load:", self.num_video)
         print("Number of frames to load:", self.num_frame)
 
-
     def _set_filesystem(self, dir_data):
         print("Loading {} => {} DataSet".format("train" if self.train else "test", self.name))
         self.apath = dir_data
         if self.train:
             self.dir = os.path.join(self.apath, 'SDR_4BIT_patch')
         else:
-            self.dir = os.path.join(self.apath, 'SDR_4BIT_patch')
+            self.dir = os.path.join(self.apath, 'input')
         print("DataSet path:", self.dir)
 
     def _scan(self):
@@ -82,8 +81,23 @@ class SDR4K_FLOW(data.Dataset):
         while frame2 is None:
             print("Error in reading image {}".format(frame2_name))
             frame2 = cv2.imread(frame2_name, cv2.IMREAD_UNCHANGED)
-        filename = os.path.split(os.path.dirname(frame1_name))[-1] + '.' + 
-                                 os.path.splitext(os.path.basename(frame1_name))[0]
+        filename = []
+        filename.append(os.path.split(os.path.dirname(frame1_name))[-1] + '.' + \
+                                 os.path.splitext(os.path.basename(frame1_name))[0])
+        filename.append(os.path.split(os.path.dirname(frame2_name))[-1] + '.' + \
+                                 os.path.splitext(os.path.basename(frame2_name))[0])
+
+        frame1_patch, frame2_patch = self.get_patch(frame1, frame2, self.args.size_must_mode)
+
+        frame1_patch = np.ascontiguousarray(frame1_patch.astype('float64').transpose((2, 0, 1)))
+        frame1_tensor = torch.from_numpy(frame1_patch).float()
+        frame1_tensor.mul_(1 / self.args.rgb_range)
+        
+        frame2_patch = np.ascontiguousarray(frame2_patch.astype('float64').transpose((2, 0, 1)))
+        frame2_tensor = torch.from_numpy(frame2_patch).float()
+        frame2_tensor.mul_(1 / self.args.rgb_range)
+
+        return frame1_tensor, frame2_tensor, filename
 
     def __len__(self):
         return self.num_frame
@@ -97,11 +111,11 @@ class SDR4K_FLOW(data.Dataset):
             if not self.args.no_augment:
                 img1, img2 = utils.data_augment(img1, img2)
         else:
-            h, w, c = img1.shape
-
             # resize to accelerate the validation process
             img1 = cv2.resize(img1, (960, 540))
             img2 = cv2.resize(img2, (960, 540))
+
+            h, w, c = img1.shape
 
             new_h, new_w = h - h % size_must_mode, w - w % size_must_mode
             img1, img2 = img1[:new_h, :new_w, :], img2[:new_h, :new_w, :]

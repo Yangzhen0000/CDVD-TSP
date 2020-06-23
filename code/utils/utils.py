@@ -1,8 +1,10 @@
 import random
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import math
+from torch.autograd import Variable
 
 
 def get_patch(*args, patch_size=17, scale=1):
@@ -137,7 +139,7 @@ def calc_meanFilter(img, kernel_size=11, n_channel=1, device='cuda'):
                                              stride=1, padding=kernel_size // 2)
     return new_img
 
-def warp(self, img, flow):
+def warp(img, flow):
     B, C, H, W = img.size()
     # mesh grid
     xx = torch.arange(0, W).view(1, -1).repeat(H, 1)
@@ -145,7 +147,7 @@ def warp(self, img, flow):
     xx = xx.view(1, 1, H, W).repeat(B, 1, 1, 1)
     yy = yy.view(1, 1, H, W).repeat(B, 1, 1, 1)
     grid = torch.cat((xx, yy), 1).float()
-    grid = grid.to(self.device)
+    grid = grid.cuda()
     vgrid = Variable(grid) + flow
 
     # scale grid to [-1,1]
@@ -162,4 +164,4 @@ def warp(self, img, flow):
 
     output = output * mask
 
-    return output, mask
+    return output

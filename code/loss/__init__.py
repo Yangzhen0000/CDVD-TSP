@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from loss.hard_example_mining import HEM
+from loss.motion_net_loss import MNL
 import matplotlib
 
 matplotlib.use('Agg')
@@ -20,6 +21,7 @@ class Loss(nn.modules.loss._Loss):
         self.n_GPUs = args.n_GPUs
         self.loss = []
         self.loss_module = nn.ModuleList()
+        self.loss_type = None
         for loss in args.loss.split('+'):
             weight, loss_type = loss.split('*')
             if loss_type == 'MSE':
@@ -28,6 +30,9 @@ class Loss(nn.modules.loss._Loss):
                 loss_function = nn.L1Loss()
             elif loss_type == 'HEM':
                 loss_function = HEM(device=device)
+            elif loss_type == 'MNL':  # loss for motion net
+                loss_function = MNL(device=device)
+                self.loss_type = 'MNL'
             elif loss_type.find('VGG') >= 0:
                 module = import_module('loss.vgg')
                 loss_function = getattr(module, 'VGG')()
@@ -66,10 +71,15 @@ class Loss(nn.modules.loss._Loss):
         if args.load != '.':
             self.load(ckp.dir, cpu=args.cpu)
 
-    def forward(self, sr, hr):
+    def forward(self, sr, hr, flow=None):
         losses = []
         for i, l in enumerate(self.loss):
-            if l['function'] is not None:
+            if self.loss_type == 'MNL':
+                loss = l['function'](sr, hr, flow)
+                effective_loss = l['weight'] * loss
+                losses.append(effective_loss)
+                self.log[-1, i] += effective_loss.item()
+            elif l['function'] is not None:
                 loss = l['function'](sr, hr)
                 effective_loss = l['weight'] * loss
                 losses.append(effective_loss)

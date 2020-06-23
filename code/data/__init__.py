@@ -32,3 +32,15 @@ class Data:
             pin_memory=not self.args.cpu,
             num_workers=self.args.n_threads
         )
+
+    def update_train_loader(self, args):
+        m_train = import_module('data.' + self.data_train.lower())
+        trainset = getattr(m_train, self.data_train.upper())(self.args, name=self.data_train, train=True)
+        self.loader_train = DataLoader(
+            trainset,
+            batch_size=self.args.batch_size,
+            shuffle=True,
+            pin_memory=not self.args.cpu,
+            num_workers=self.args.n_threads
+        )
+        return self.loader_train

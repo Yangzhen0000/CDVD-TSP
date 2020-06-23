@@ -61,19 +61,22 @@ class Flow_PWC(nn.Module):
         """
         B, C, H, W = x.size()
         # mesh grid
+        # generate x index and y index for each pixel
         xx = torch.arange(0, W).view(1, -1).repeat(H, 1)
         yy = torch.arange(0, H).view(-1, 1).repeat(1, W)
         xx = xx.view(1, 1, H, W).repeat(B, 1, 1, 1)
         yy = yy.view(1, 1, H, W).repeat(B, 1, 1, 1)
         grid = torch.cat((xx, yy), 1).float()
         grid = grid.to(self.device)
+
+        # add index and backward flow to get the index in original image
         vgrid = Variable(grid) + flo
 
-        # scale grid to [-1,1]
+        # scale grid to [-1,1], why? the displacement not larger than 1?
         vgrid[:, 0, :, :] = 2.0 * vgrid[:, 0, :, :].clone() / max(W - 1, 1) - 1.0
         vgrid[:, 1, :, :] = 2.0 * vgrid[:, 1, :, :].clone() / max(H - 1, 1) - 1.0
 
-        vgrid = vgrid.permute(0, 2, 3, 1)
+        vgrid = vgrid.permute(0, 2, 3, 1)  # N*H*W*C
         output = nn.functional.grid_sample(x, vgrid, padding_mode='border')
         # how to understand the mask?
         mask = torch.autograd.Variable(torch.ones(x.size())).cuda()
