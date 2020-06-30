@@ -26,6 +26,10 @@ class Trainer:
         return optim.Adam(self.model.parameters(), **kwargs)
 
     def make_scheduler(self):
+        if self.args.scheduler == 'plateau':
+            return lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='max', factor=0.1, patience=20, verbose=False,
+                                                  threshold=0.001, threshold_mode='rel', cooldown=0, min_lr=1e-07,
+                                                  eps=1e-08)
         kwargs = {'step_size': self.args.lr_decay, 'gamma': self.args.gamma}
         return lr_scheduler.StepLR(self.optimizer, **kwargs)
 

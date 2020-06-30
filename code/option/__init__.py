@@ -59,6 +59,8 @@ parser.add_argument('--test_only', action='store_true',
 # Optimization specifications
 parser.add_argument('--loss', type=str, default='1*L1',
                     help='loss function configuration')
+parser.add_argument('--scheduler', type=str, default='step', choices=['step', 'plateau'],
+                    help='learning rate scheduler')
 parser.add_argument('--lr', type=float, default=1e-4,
                     help='learning rate')
 parser.add_argument('--lr_decay', type=int, default=200,

@@ -23,7 +23,6 @@ class Trainer_VBDE(Trainer):
 
     def train(self):
         print("Now training")
-        self.scheduler.step()
         self.loss.step()
         epoch = self.scheduler.last_epoch + 1
         lr = self.scheduler.get_lr()[0]
@@ -94,3 +93,4 @@ class Trainer_VBDE(Trainer):
                 best[0], best[1] + 1))
             if not self.args.test_only:
                 self.ckp.save(self, epoch, is_best=(best[1] + 1 == epoch))
+            return best[0]
