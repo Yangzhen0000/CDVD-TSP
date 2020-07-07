@@ -17,6 +17,9 @@ def set_template(args):
     args.rgb_range = 65535
     args.size_must_mode = 4
     args.patch_size = 256
+    args.dir_data = "/home/medialab/workspace/hdd/zhen/EDVR/datasets/SDR4k/train/" 
+    args.dir_data_test = "/home/medialab/workspace/hdd/zhen/EDVR/datasets/SDR4k/val/"
+    args.epochs = 500
     # test
     args.test_every = 1000
     args.print_every = 10
@@ -61,5 +64,9 @@ def set_template(args):
         args.task = 'VideoBDE'
         args.model = 'C3D'
         args.n_resblock = 3
+    elif args.template == 'HYBRID_C3D':
+        args.model = 'HYBRID_C3D'
+        args.n_resblock = 4
+        args.scheduler = 'plateau'
     else:
         raise NotImplementedError('Template [{:s}] is not found'.format(args.template))

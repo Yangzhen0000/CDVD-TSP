@@ -21,14 +21,15 @@ if __name__ == '__main__':
         loss = loss.Loss(args, chkp) if not args.test_only else None
         loader = data.Data(args)
         t = Trainer_VBDE(args, loader, model, loss, chkp)
+        val_pnsr = 0
         while not t.terminate():
-            t.train()
-            val_pnsr = t.test()
-            t.loader_train = loader.update_train_loader(args)
             if args.scheduler == 'plateau':
                 t.scheduler.step(val_pnsr)
             else:
                 t.scheduler.step()
+            t.train()
+            val_pnsr = t.test()
+            t.loader_train = loader.update_train_loader(args)
 
     elif args.task == 'OpticalFlow':
         print("Selected task: {}".format(args.task))

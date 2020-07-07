@@ -15,7 +15,7 @@ class Trainer_VBDE(Trainer):
 
     def make_optimizer(self):
         kwargs = {'lr': self.args.lr, 'weight_decay': self.args.weight_decay}
-        if self.args.model == 'C3D':
+        if self.args.model in ['C3D', 'HYBRID_C3D']: # upper case of the model.py file name
             return optim.Adam([{"params": self.model.get_model().parameters()}], **kwargs)
         return optim.Adam([{"params": self.model.get_model().recons_net.parameters()},
                            {"params": self.model.get_model().flow_net.parameters(), "lr": 1e-6}],
@@ -25,7 +25,8 @@ class Trainer_VBDE(Trainer):
         print("Now training")
         self.loss.step()
         epoch = self.scheduler.last_epoch + 1
-        lr = self.scheduler.get_lr()[0]
+        # lr = self.scheduler.get_lr()[0]
+        lr = self.optimizer.param_groups[0]['lr']
         self.ckp.write_log('Epoch {:3d} with Lr {:.2e}'.format(epoch, decimal.Decimal(lr)))
         self.loss.start_log()
         self.model.train()
