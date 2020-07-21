@@ -59,7 +59,6 @@ def set_template(args):
         args.data_train = 'SDR4K_FLOW'
         args.data_test = 'SDR4K_FLOW'
         args.video_samples = 500
-        
     elif args.template == 'C3D':
         args.task = 'VideoBDE'
         args.model = 'C3D'

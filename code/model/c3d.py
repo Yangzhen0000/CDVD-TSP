@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torch
 import model.blocks as blocks
+from utils import utils
+
 
 def make_model(args):
     device = 'cpu' if args.cpu else 'cuda'
@@ -74,6 +76,7 @@ class C3D(nn.Module):
 
     def forward(self, x):
         reference = x[:, 1, :, :, :]
+        blurred_reference = utils.calc_meanFilter(reference, n_channel=3, kernel_size=5)
         in_sequence = x.permute(0, 2, 1, 3, 4)                              #N*C*D*H*W
 
         inblock = self.inBlock(in_sequence)                                 #N*n_feat*D*H*W
@@ -84,4 +87,4 @@ class C3D(nn.Module):
         outBlock = self.outBlock(decoder_first + inblock)
         out = torch.squeeze(outBlock)
 
-        return out + reference
+        return out + blurred_reference

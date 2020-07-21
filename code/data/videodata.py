@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.utils.data as data
 import utils.utils as utils
+import utils.jitter as jitter
 import cv2
 import random
 
@@ -190,6 +191,9 @@ class VIDEODATA(data.Dataset):
             while lr_img is None:
                 print("Error in reading image {}".format(lr_name))
                 lr_img = cv2.imread(lr_name, cv2.IMREAD_UNCHANGED)
+            if self.args.jitter:
+                # print("Adding noise")
+                lr_img = jitter.jitter(lr_img, step=4096)
             inputs.append(lr_img)
             # debugging output
             # if os.path.basename(lr_name) == '003.png':

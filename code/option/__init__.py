@@ -39,12 +39,16 @@ parser.add_argument('--no_augment', action='store_true',
                     help='do not use data augmentation')
 parser.add_argument('--video_samples', type=int, default=200,
                     help='video sample number of train set')
+parser.add_argument('--jitter', action='store_true',
+                    help='if True, add gaussian noise on the input')
 
 # Model specifications
 parser.add_argument('--model', default='.',
                     help='model name')
 parser.add_argument('--pre_train', type=str, default='.',
                     help='pre-trained model directory')
+parser.add_argument('--blur', action='store_true',
+                    help='if True, blur input tensor for long skip residual')
 
 # Training specifications
 parser.add_argument('--test_every', type=int, default=1000,

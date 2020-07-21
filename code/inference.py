@@ -10,7 +10,8 @@ import argparse
 #from model.vbde_downflow import VBDE_DOWNFLOW
 #from model.vbde import VBDE
 #from model.vbde_residual import VBDE_RESIDUAL
-from model.vbde_stepmask import VBDE_STEPMASK
+#from model.vbde_stepmask import VBDE_STEPMASK
+from model.c3d import C3D
 from tqdm import tqdm
 
 class Traverse_Logger:
@@ -64,9 +65,12 @@ class Inference:
 #           in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=3, n_feat=32,
 #           is_mask_filter=True, device=self.device
 #       )
-        self.net = VBDE_STEPMASK(
-            in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=3, n_feat=32,
-            is_mask_filter=True, device=self.device
+#       self.net = VBDE_STEPMASK(
+#           in_channels=3, n_sequence=self.n_seq, out_channels=3, n_resblock=3, n_feat=32,
+#           is_mask_filter=True, device=self.device
+#       )
+        self.net = C3D(
+            in_channels=3, n_sequence=3, out_channels=3, n_resblock=3, n_feat=32, device=self.device
         )
         self.net.load_state_dict(torch.load(self.model_path), strict=True)
         self.net = self.net.to(self.device)
@@ -95,8 +99,8 @@ class Inference:
                     gt = cv2.imread(gt_seq[self.n_seq // 2], cv2.IMREAD_UNCHANGED)
 
                     # resize to avoid CUDA OUT OF MEMORY
-                    inputs = [cv2.resize(p, (960, 540)) for p in origins]
-                    gt = cv2.resize(gt, (960, 540))
+                    inputs = [cv2.resize(p, (1280, 720)) for p in origins]
+                    gt = cv2.resize(gt, (1280, 720))
 
                     h, w, c = inputs[self.n_seq // 2].shape
                     new_h, new_w = h - h % self.size_must_mode, w - w % self.size_must_mode
@@ -112,7 +116,7 @@ class Inference:
                     psnr, ssim = self.get_PSNR_SSIM(output_img, gt)
                     video_psnr.append(psnr)
                     video_ssim.append(ssim)
-                    video_forward_time.append(forward_time)
+                    video_forward_time.append(forward_time - preprocess_time)
                     total_psnr[v] = video_psnr
                     total_ssim[v] = video_ssim
                     total_forward_time[v] = video_forward_time
