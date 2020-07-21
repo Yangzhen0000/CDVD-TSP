@@ -41,6 +41,10 @@ parser.add_argument('--video_samples', type=int, default=200,
                     help='video sample number of train set')
 parser.add_argument('--jitter', action='store_true',
                     help='if True, add gaussian noise on the input')
+parser.add_argument('--qmethod', type=str, default='floor', help='Quantization method, [floor, round...]')
+parser.add_argument('--lbd', type=int, default=4, help='low bit depth')
+parser.add_argument('--hbd', type=int, default=16, help='high bit depth')
+
 
 # Model specifications
 parser.add_argument('--model', default='.',

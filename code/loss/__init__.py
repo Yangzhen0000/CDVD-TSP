@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from loss.hard_example_mining import HEM
 from loss.motion_net_loss import MNL
+from loss.quantization_cycle_consistency import QCC
 import matplotlib
 
 matplotlib.use('Agg')
@@ -33,6 +34,8 @@ class Loss(nn.modules.loss._Loss):
             elif loss_type == 'MNL':  # loss for motion net
                 loss_function = MNL(device=device)
                 self.loss_type = 'MNL'
+            elif loss_type == 'QCC':
+                loss_function = QCC(method=args.qmethod, hbd=args.hbd, lbd=args.lbd, device=device)
             elif loss_type.find('VGG') >= 0:
                 module = import_module('loss.vgg')
                 loss_function = getattr(module, 'VGG')()

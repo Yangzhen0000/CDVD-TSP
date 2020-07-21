@@ -4,7 +4,7 @@ def set_template(args):
     # network parameters
     args.n_feat = 32
     # loss
-    args.loss = '1*L1+2*HEM'
+    args.loss = '1*L1+2*HEM+0.1*QCC'
     # learning rata strategy
     args.lr = 1e-4
     args.lr_decay = 100
@@ -19,6 +19,9 @@ def set_template(args):
     args.patch_size = 256
     args.dir_data = "/home/medialab/workspace/hdd/zhen/EDVR/datasets/SDR4k/train/" 
     args.dir_data_test = "/home/medialab/workspace/hdd/zhen/EDVR/datasets/SDR4k/val/"
+    args.lbd = 4
+    args.hbd = 16
+    # train
     args.epochs = 500
     # test
     args.test_every = 1000
