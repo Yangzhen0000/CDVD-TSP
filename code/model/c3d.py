@@ -7,16 +7,19 @@ from utils import utils
 def make_model(args):
     device = 'cpu' if args.cpu else 'cuda'
     return C3D(in_channels=args.n_colors, n_sequence=args.n_sequence, out_channels=args.n_colors,
-        n_resblock=args.n_resblock, n_feat=args.n_feat, device=device)
+        n_resblock=args.n_resblock, n_feat=args.n_feat, device=device, blur=args.blur)
 
 
 class C3D(nn.Module):
-    def __init__(self, in_channels=3, n_sequence=3, out_channels=3, n_resblock=3, n_feat=32, device='cuda'):
+    def __init__(self, in_channels=3, n_sequence=3, out_channels=3, n_resblock=3, n_feat=32, device='cuda', blur=False):
         super(C3D, self).__init__()
         print("Creating C3D Net")
 
         self.n_sequence = n_sequence
         self.device = device
+        self.blur = blur
+        if self.blur:
+            print("Blur input LBD image before long skip connection...")
 
         assert n_sequence == 3, "Only support args.n_sequence=3; but get args.n_sequence={}".format(n_sequence)
 
@@ -76,7 +79,8 @@ class C3D(nn.Module):
 
     def forward(self, x):
         reference = x[:, 1, :, :, :]
-        blurred_reference = utils.calc_meanFilter(reference, n_channel=3, kernel_size=5)
+        if self.blur:
+            reference = utils.calc_meanFilter(reference, n_channel=3, kernel_size=5)
         in_sequence = x.permute(0, 2, 1, 3, 4)                              #N*C*D*H*W
 
         inblock = self.inBlock(in_sequence)                                 #N*n_feat*D*H*W
@@ -87,4 +91,4 @@ class C3D(nn.Module):
         outBlock = self.outBlock(decoder_first + inblock)
         out = torch.squeeze(outBlock)
 
-        return out + blurred_reference
+        return out + reference

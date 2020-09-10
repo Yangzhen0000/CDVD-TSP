@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 class Loss(nn.modules.loss._Loss):
     def __init__(self, args, ckp):
         super(Loss, self).__init__()
-        print('Preparing loss function:')
+        print('Preparing loss function:{}'.format(args.loss))
 
         device = torch.device('cpu' if args.cpu else 'cuda')
 
@@ -35,6 +35,7 @@ class Loss(nn.modules.loss._Loss):
                 loss_function = MNL(device=device)
                 self.loss_type = 'MNL'
             elif loss_type == 'QCC':
+                print("Use Quantization Cycle Consistency Loss...")
                 loss_function = QCC(method=args.qmethod, hbd=args.hbd, lbd=args.lbd, device=device)
             elif loss_type.find('VGG') >= 0:
                 module = import_module('loss.vgg')

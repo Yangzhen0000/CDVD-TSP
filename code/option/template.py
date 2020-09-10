@@ -4,7 +4,7 @@ def set_template(args):
     # network parameters
     args.n_feat = 32
     # loss
-    args.loss = '1*L1+2*HEM+0.1*QCC'
+    args.loss = '1*L1+2*HEM'
     # learning rata strategy
     args.lr = 1e-4
     args.lr_decay = 100
@@ -66,6 +66,7 @@ def set_template(args):
         args.task = 'VideoBDE'
         args.model = 'C3D'
         args.n_resblock = 3
+        args.loss = '1*L1+2*HEM+0.1*QCC'
     elif args.template == 'HYBRID_C3D':
         args.model = 'HYBRID_C3D'
         args.n_resblock = 4

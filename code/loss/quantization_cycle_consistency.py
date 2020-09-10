@@ -16,9 +16,9 @@ class QCC(nn.Module):
 
     def quantization(self, hbd_image):
         if self.method == 'floor':
-            lbd_image = (hbd_image / (2**self.hbd-1)).floor() * (2**self.lbd-1)
+            lbd_image = (hbd_image / 2**(self.hbd-self.lbd)).floor()
         elif self.method == 'round':
-            lbd_image = (hbd_image / (2**self.hbd-1)).round() * (2**self.lbd-1)
+            lbd_image = (hbd_image / 2**(self.hbd-self.lbd)).round()
         return lbd_image
 
     def forward(self, x, y):
@@ -29,4 +29,5 @@ class QCC(nn.Module):
         lbd_y = self.quantization(y)
 
         qcc_loss = self.L1_loss(lbd_x, lbd_y)
+        # print("QCC_LOSS=", qcc_loss)
         return qcc_loss
